@@ -1,4 +1,5 @@
 ﻿using share;
+using Shared;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,13 @@ namespace snake
     {
         Up, Down, Left, Right
     }
+
     internal class SnakeGameplayState : BaseGameState
     {
+        public int fieldWidth;
+        public int fieldHeight;
+        const char squareSymbol = '■';
+
         private struct Cell
         {
             public int x; public int y;
@@ -29,8 +35,12 @@ namespace snake
         public override void Reset()
         {
             _body.Clear();
+            var middleY = fieldHeight / 2;
+            var middleX = fieldWidth / 2;
+
             _currentDir = SnakeDir.Up;
-            _body.Add(new Cell(0, 0));
+
+            _body.Add(new Cell(middleX, middleY));
             _timeToMove = 0f;
         }
 
@@ -45,7 +55,6 @@ namespace snake
             Cell nextCell = ShiftTo(head, _currentDir);
             _body.RemoveAt(_body.Count - 1);
             _body.Insert(0, nextCell);
-            Console.WriteLine($"Элемент {0} имеет координаты: {_body[0].x}, {_body[0].y}");
         }
 
         public void SetDirection (SnakeDir dir)
@@ -58,9 +67,9 @@ namespace snake
             switch (toDir)
             {
                 case SnakeDir.Up:
-                    return new Cell(start.x, start.y + 1);
-                case SnakeDir.Down:
                     return new Cell(start.x, start.y - 1);
+                case SnakeDir.Down:
+                    return new Cell(start.x, start.y + 1);
                 case SnakeDir.Left:
                     return new Cell(start.x - 1, start.y);
                 case SnakeDir.Right:
@@ -68,6 +77,14 @@ namespace snake
             }
 
             return start;
+        }
+
+        public override void Draw(ConsoleRenderer renderer)
+        {
+            foreach(var cell in _body)
+            {
+                renderer.SetPixel(cell.x, cell.y, squareSymbol, 3);
+            }
         }
     }
 }
