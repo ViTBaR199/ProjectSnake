@@ -1,16 +1,31 @@
 ﻿using share;
+using Shared;
 using snake;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security;
 
 namespace ProjectSnake.snake
 {
     internal class SnakeGameLogic : BaseGameLogic
     {
         private SnakeGameplayState _gameplayState = new SnakeGameplayState();
+        private bool newGamePending = false;
+        private int currentLevel;
+        private ShowTextState showTextState = new ShowTextState(2f);
+
+        private void GoToNextLevel()
+        {
+            currentLevel++;
+            newGamePending = false;
+            showTextState.text = $"Level: {currentLevel}!";
+            ChangeState(showTextState);
+        }
+        private void GoToGameOver()
+        {
+            currentLevel = 0;
+            newGamePending = true;
+            showTextState.text = $"Game Over!";
+            ChangeState(showTextState);
+        }
 
         public override void OnArrowDown()
         {
@@ -38,11 +53,25 @@ namespace ProjectSnake.snake
 
         public override void Update(float deltaTime)
         {
-            if(currentState != _gameplayState) this.GotoGameplay();
+            if (currentState != null && !currentState.IsDone())
+                return;
+
+            if (currentState == null || currentState == _gameplayState && !_gameplayState.gameOver)
+                this.GoToNextLevel();
+
+            else if (currentState == _gameplayState && _gameplayState.gameOver)
+                this.GoToGameOver();
+
+            else if (currentState != _gameplayState && newGamePending)
+                this.GoToNextLevel();
+
+            else if (currentState != _gameplayState && !newGamePending)
+                this.GotoGameplay();
         }
 
         public void GotoGameplay()
         {
+            _gameplayState.level = currentLevel;
             _gameplayState.fieldHeight = screenHeight;
             _gameplayState.fieldWidth = screenWidth;
             this.ChangeState(_gameplayState);
